@@ -49,7 +49,7 @@ def list_create():
 		print('List *'+list.title+'* for user with id: *'+str(session['user_id'])+'* created!')
 		flash('List *'+list.title+'* for user with id: *'+str(session['user_id'])+'* created!')
 	
-	return redirect(url_for('dashboard'))
+	return redirect(request.referrer)
 	
 @app.route("/list_update/<int:id>", methods=('GET', 'POST'))
 def list_update(id):

@@ -39,7 +39,7 @@ from unittest_prettify.colorize import (
 class List_Test(unittest.TestCase):
 	
 	def setUp(self):
-		flask_app.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/testing24.db'
+		flask_app.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/testing25.db'
 		flask_app.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 		flask_app.app.config['TESTING'] = True
 		
@@ -89,6 +89,7 @@ class List_Test(unittest.TestCase):
 		
 		return
 		
+	#maybe there isn't ever a get call? So no referrer for that call?
 	def test_list_create_get(self):
 		'''Test Comment for test_empty_db'''
 		
@@ -102,7 +103,8 @@ class List_Test(unittest.TestCase):
 		'/list_create', follow_redirects=True)
 		
 		#Assert
-		self.assertTrue(b'Getting Started' in result.data)
+		#print(result.data)
+		#self.assertTrue(b'Getting Started' in result.data)
 	
 	def test_list_create_post(self):
 		'''Test Comment for test_empty_db'''
@@ -219,7 +221,7 @@ class List_Test(unittest.TestCase):
 		parent_user = 1, title=new_list_title).first()
 		
 		#Assert
-		print(result.data)
+		#print(result.data)
 		self.assertTrue(b'A list with this name already exists' in result.data)
 		self.assertIsNotNone(result_before)
 		self.assertIsNotNone(result_after)	
@@ -267,16 +269,65 @@ class List_Test(unittest.TestCase):
 		self.assertIsNotNone(result_after)
 		
 	def test_find_current_list(self):
-		pass
 		
-	def test_change_current_list(self):
+		#assess
+		self.reg_log()
+		current_list_query = db.session.query(List).filter_by(parent_user=1, current=1).first()
+		lists = db.session.query(List).filter_by(parent_user=1).all()
+		
+		#act
+		current_list_from_function = find_current_list(lists)
+		
+		#assert
+		self.assertEqual(current_list_query.id, current_list_from_function.id)
+		self.assertEqual(current_list_query.title, current_list_from_function.title)
+		
+		
+	def test_change_current_list_good(self):
 		'''Test Comment for test_empty_db'''
 		
 		#Arrange
-		pass
+		self.reg_log()
+		initial_current_list = 1
+		new_current_list = 2
+		current_list_before = db.session.query(List).filter_by(parent_user=1, current=1).first()
 		
 		#Act
+		result = change_current_list(initial_current_list, new_current_list)
+		current_list_after = db.session.query(List).filter(parent_user=1, current=1).first()
 		
 		#Assert
+		self.assertNotEqual(current_list_before.id, current_list_after.id)
+		self.assertEqual(current_list_before.id, 1)
+		self.assertEqual(current_list_after.id, 2)
+		self.assertEqual(current_list_after.title, "Good Books")
+		#self.assertTrue("Good Books" in result.data)
+		#self.assertTrue("Getting Started" not in result.data)
+		
+		
+	def test_change_current_list_good(self):
+		'''Test Comment for test_empty_db'''
+		
+		#Arrange
+		self.reg_log()
+		
+		initial_current_list = 1
+		new_current_list = 10
+		current_list_before = db.session.query(List).filter_by(parent_user=1, current=1).first()
+		
+		#Act
+		#result.data = change_current_list(initial_current_list, new_current_list)
+		#here I still need a self.app.get() or else it says need to push an app context before using return redirect(url_for...
+		result = self.app.get("/change_current_list/"+str(initial_current_list)+"/"+str(new_current_list), follow_redirects=True)
+		current_list_after = db.session.query(List).filter_by(parent_user=1, current=1).first()
+		
+		#Assert
+		self.assertEqual(current_list_before.id, current_list_after.id)
+		self.assertEqual(current_list_before.id, 1)
+		self.assertEqual(current_list_after.id, 1)
+		self.assertEqual(current_list_after.title, "Getting Started")
+		#self.assertTrue("Good Books" not in result.data)
+		#self.assertTrue("Getting Started" in result.data)
+		
 		
 
